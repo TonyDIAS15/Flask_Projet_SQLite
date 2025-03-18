@@ -46,7 +46,7 @@ def user_auth():
             return render_template('formulaire_authentification_user.html', error=True)
     return render_template('formulaire_authentification_user.html', error=False)
 
-@app.route('/fiche_nom/', methods=['GET'])
+@app.route('/fiche_nom/<int:post_id>', methods=['GET'])
 def fiche_nom():
     if not est_user_authentifie():
         return redirect(url_for('user_auth'))
@@ -54,7 +54,7 @@ def fiche_nom():
     nom_recherche = request.args.get('nom', '')
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom_recherche,))
+    cursor.execute('SELECT * FROM clients WHERE id = ?', (nom_recherche,))
     data = cursor.fetchall()
     conn.close()
     return render_template('read_data.html', data=data)
