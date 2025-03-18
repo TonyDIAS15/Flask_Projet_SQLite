@@ -29,14 +29,17 @@ def lecture():
 @app.route('/authentification', methods=['GET', 'POST'])
 def authentification():
     if request.method == 'POST':
-        if request.form['username'] == 'admin' and request.form['password'] == 'password' or request.form['username'] == 'user' and request.form['password'] == '12345':
+        if request.form['username'] == 'admin' and request.form['password'] == 'password':
             session['authentifie'] = True
             return redirect(url_for('lecture'))
+        elif request.form['username'] == 'user' and request.form['password'] == '12345':
+            session['utilisateur_authentifie'] = True
+            return redirect(url_for('hello_world'))
         else:
             return render_template('formulaire_authentification.html', error=True)
     
     return render_template('formulaire_authentification.html', error=False)
-    
+
 @app.route('/fiche_client/<int:post_id>')
 def Readfiche(post_id):
     conn = sqlite3.connect('database.db')
