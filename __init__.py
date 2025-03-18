@@ -12,10 +12,6 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
 def est_authentifie():
     return session.get('authentifie')
 
-# Fonction pour créer une clé "user_auth" dans la session utilisateur
-def est_user_authentifie():
-    return session.get('user_auth')
-
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
@@ -36,25 +32,12 @@ def authentification():
             return render_template('formulaire_authentification.html', error=True)
     return render_template('formulaire_authentification.html', error=False)
 
-@app.route('/user_auth', methods=['GET', 'POST'])
-def user_auth():
-    if request.method == 'POST':
-        if request.form['username'] == 'user' and request.form['password'] == '12345':
-            session['user_auth'] = True
-            return redirect(url_for('fiche_nom'))
-        else:
-            return render_template('formulaire_authentification_user.html', error=True)
-    return render_template('formulaire_authentification_user.html', error=False)
-
-@app.route('/fiche_nom/<int:post_id>', methods=['GET'])
+@app.route('/fiche_nom/', methods=['GET'])
 def fiche_nom():
-    if not est_user_authentifie():
-        return redirect(url_for('user_auth'))
-
     nom_recherche = request.args.get('nom', '')
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE id = ?', (nom_recherche,))
+    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom_recherche,))
     data = cursor.fetchall()
     conn.close()
     return render_template('read_data.html', data=data)
