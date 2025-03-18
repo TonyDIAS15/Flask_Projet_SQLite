@@ -12,6 +12,10 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
 def est_authentifie():
     return session.get('authentifie')
 
+# Fonction pour vérifier si l'utilisateur est authentifié
+def est_utilisateur_authentifie():
+    return session.get('utilisateur_authentifie')
+
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
@@ -33,6 +37,17 @@ def authentification():
 
     return render_template('formulaire_authentification.html', error=False)
 
+@app.route('/authentification_user', methods=['GET', 'POST'])
+def authentification_user():
+    if request.method == 'POST':
+        if request.form['username'] == 'user' and request.form['password'] == '12345':
+            session['utilisateur_authentifie'] = True
+            return redirect(url_for('hello_world'))
+        else:
+            return render_template('formulaire_authentification.html', error=True)
+
+    return render_template('formulaire_authentification.html', error=False)
+
 @app.route('/fiche_client/<int:post_id>')
 def Readfiche(post_id):
     conn = sqlite3.connect('database.db')
@@ -42,11 +57,14 @@ def Readfiche(post_id):
     conn.close()
     return render_template('read_data.html', data=data)
 
-@app.route('/fiche_nom/<nom>')  # Nouvelle route pour la recherche par nom
+@app.route('/fiche_nom/<nom>')
 def search_by_name(nom):
+    if not est_utilisateur_authentifie():
+        return redirect(url_for('authentification_user'))
+
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom,))
+    cursor.execute('SELECT * FROM clients WHERE UPPER(nom) = UPPER(?)', (nom,))
     data = cursor.fetchall()
     conn.close()
     if data:
