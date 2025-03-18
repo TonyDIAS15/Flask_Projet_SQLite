@@ -41,7 +41,7 @@ def user_authentification():
     if request.method == 'POST':
         if request.form['username'] == 'user' and request.form['password'] == '12345':
             session['user_authentifie'] = True
-            return redirect(url_for('fiche_nom', nom=request.form['nom']))
+            return redirect(url_for('fiche_nom', id=request.form['id']))
         else:
             return render_template('formulaire_user_authentification.html', error=True)
     return render_template('formulaire_user_authentification.html', error=False)
@@ -55,14 +55,14 @@ def Readfiche(post_id):
     conn.close()
     return render_template('read_data.html', data=data)
 
-@app.route('/fiche_nom/<nom>')
-def fiche_nom(nom):
+@app.route('/fiche_nom/<int:id>')
+def fiche_nom(id):
     if not est_utilisateur_authentifie():
         return redirect(url_for('user_authentification'))
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom,))
+    cursor.execute('SELECT * FROM clients WHERE id = ?', (id,))
     data = cursor.fetchall()
     conn.close()
     return render_template('read_data.html', data=data)
