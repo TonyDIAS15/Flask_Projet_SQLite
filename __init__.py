@@ -55,7 +55,7 @@ def Readfiche(post_id):
     conn.close()
     return render_template('read_data.html', data=data)
 
-@app.route('/fiche_nom/<int:id>')
+@app.route('/fiche_nom/<int:post_id>')
 def fiche_nom(id):
     if not est_utilisateur_authentifie():
         return redirect(url_for('user_authentification'))
