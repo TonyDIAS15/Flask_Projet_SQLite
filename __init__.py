@@ -34,7 +34,13 @@ def authentification():
             return redirect(url_for('lecture'))
         else:
             return render_template('formulaire_authentification.html', error=True)
-
+            
+        if request.form('username') == 'user' and request.form('password') == '12345':
+            session['utilisateur_authentifie'] = True
+            return redirect(url_for('hello_world'))
+        else:
+            return render_template('formulaire_authentification.html', error=True)
+    
     return render_template('formulaire_authentification.html', error=False)
 
 @app.route('/authentification_user', methods=['GET', 'POST'])
