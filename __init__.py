@@ -40,7 +40,7 @@ def authentification():
 @app.route('/authentification_user', methods=['GET', 'POST'])
 def authentification_user():
     if request.method == 'POST':
-        if request.form['username'] == 'user' and request.form['password'] == '12345':
+        if request.form.get('username') == 'user' and request.form.get('password') == '12345':
             session['utilisateur_authentifie'] = True
             return redirect(url_for('hello_world'))
         else:
