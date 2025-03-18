@@ -49,7 +49,7 @@ def Readfiche(post_id):
 @app.route('/fiche_nom/<nom>')
 def search_by_name(nom):
     if not est_utilisateur_authentifie():
-        return redirect(url_for('authentification_user'))
+        return redirect(url_for('authentification'))
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
