@@ -41,11 +41,11 @@ def authentification():
 def authentification_user():
     if request.method == 'POST':
         if request.form['username'] == 'user' and request.form['password'] == '12345':
-            session['utilisateur_authentifie'] = True
-            return redirect(url_for('hello_world'))
+            session['authentifie'] = True
+            return redirect(url_for('hello.html'))
         else:
             return render_template('formulaire_authentification.html', error=True)
-
+    
     return render_template('formulaire_authentification.html', error=False)
 
 @app.route('/fiche_client/<int:post_id>')
