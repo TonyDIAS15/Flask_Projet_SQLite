@@ -1,97 +1,111 @@
-from flask import Flask, render_template_string, render_template, jsonify, request, redirect, url_for, session
-from flask import json
-from urllib.request import urlopen
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import sqlite3
 
-app = Flask(__name__)                                                                                                                  
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'  # Clé secrète pour les sessions
+app = Flask(__name__)
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-# Fonction pour vérifier l'authentification admin
-def est_authentifie():
-    return session.get('authentifie')
+# Fonctions d'authentification
+def est_authentifie_admin():
+    return session.get('authentifie_admin')
 
-# Fonction pour vérifier l'authentification user
 def est_authentifie_user():
     return session.get('authentifie_user')
 
 @app.route('/')
-def hello_world():
-    return render_template('hello.html')
+def accueil():
+    return render_template('accueil.html')
 
-@app.route('/lecture')
-def lecture():
-    if not est_authentifie():
-        return redirect(url_for('authentification'))
-    return "<h2>Bravo, vous êtes authentifié</h2>"
-
-@app.route('/authentification', methods=['GET', 'POST'])
-def authentification():
+# Authentification Admin
+@app.route('/authentification_admin', methods=['GET', 'POST'])
+def authentification_admin():
     if request.method == 'POST':
         if request.form['username'] == 'admin' and request.form['password'] == 'password':
-            session['authentifie'] = True
-            return redirect(url_for('lecture'))
+            session['authentifie_admin'] = True
+            return redirect(url_for('gestion_bibliotheque'))
         return render_template('formulaire_authentification.html', error=True)
-
     return render_template('formulaire_authentification.html', error=False)
 
+# Authentification Utilisateur
 @app.route('/authentification_user', methods=['GET', 'POST'])
 def authentification_user():
     if request.method == 'POST':
         if request.form['username'] == 'user' and request.form['password'] == '12345':
             session['authentifie_user'] = True
-            return redirect(url_for('fiche_nom'))
+            return redirect(url_for('recherche_livre'))
         return render_template('formulaire_authentification.html', error=True)
+    return render_template('formulaire_authentification.html', error=False)
 
-@app.route('/fiche_client/<int:post_id>')
-def Readfiche(post_id):
+# Gestion des livres
+@app.route('/ajouter_livre', methods=['POST'])
+def ajouter_livre():
+    if not est_authentifie_admin():
+        return redirect(url_for('authentification_admin'))
+
+    titre = request.form['titre']
+    auteur = request.form['auteur']
+
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
-    data = cursor.fetchall()
+    cursor.execute('INSERT INTO livres (titre, auteur, disponible) VALUES (?, ?, ?)', (titre, auteur, True))
+    conn.commit()
     conn.close()
-    return render_template('read_data.html', data=data)
 
-@app.route('/consultation/')
-def ReadBDD():
+    return redirect(url_for('gestion_bibliotheque'))
+
+@app.route('/supprimer_livre/<int:livre_id>', methods=['POST'])
+def supprimer_livre(livre_id):
+    if not est_authentifie_admin():
+        return redirect(url_for('authentification_admin'))
+
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM clients;')
-    data = cursor.fetchall()
+    cursor.execute('DELETE FROM livres WHERE id = ?', (livre_id,))
+    conn.commit()
     conn.close()
-    return render_template('read_data.html', data=data)
 
-@app.route('/fiche_nom/', methods=['GET', 'POST'])
-def fiche_nom():
+    return redirect(url_for('gestion_bibliotheque'))
+
+@app.route('/recherche_livre/', methods=['GET', 'POST'])
+def recherche_livre():
     if not est_authentifie_user():
         return redirect(url_for('authentification_user'))
 
     if request.method == 'POST':
-        nom_recherche = request.form['nom']
+        titre_recherche = request.form['titre']
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM clients WHERE nom = ?', (nom_recherche,))
+        cursor.execute('SELECT * FROM livres WHERE titre = ? AND disponible = 1', (titre_recherche,))
         data = cursor.fetchall()
         conn.close()
-        return render_template('read_data.html', data=data)
+        return render_template('resultats_recherche.html', data=data)
 
-    return render_template('recherche_nom.html')
+    return render_template('recherche_livre.html')
 
-@app.route('/enregistrer_client', methods=['GET'])
-def formulaire_client():
-    return render_template('formulaire.html')
-
-@app.route('/enregistrer_client', methods=['POST'])
-def enregistrer_client():
-    nom = request.form['nom']
-    prenom = request.form['prenom']
+@app.route('/emprunt_livre/<int:livre_id>', methods=['POST'])
+def emprunt_livre(livre_id):
+    if not est_authentifie_user():
+        return redirect(url_for('authentification_user'))
 
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO clients (created, nom, prenom, adresse) VALUES (?, ?, ?, ?)', (1002938, nom, prenom, "ICI"))
+    cursor.execute('UPDATE livres SET disponible = 0 WHERE id = ?', (livre_id,))
     conn.commit()
     conn.close()
-    return redirect('/consultation/')
+
+    return redirect(url_for('recherche_livre'))
+
+@app.route('/gestion_bibliotheque')
+def gestion_bibliotheque():
+    if not est_authentifie_admin():
+        return redirect(url_for('authentification_admin'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM livres;')
+    data = cursor.fetchall()
+    conn.close()
+
+    return render_template('gestion_bibliotheque.html', data=data)
 
 if __name__ == "__main__":
     app.run(debug=True)
