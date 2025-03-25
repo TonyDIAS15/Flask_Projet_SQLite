@@ -125,14 +125,14 @@ def ajouter_livre():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-@app.route('/livres/supprimer/<int:id_livre>', methods=['POST'])
+@app.route('/livres/supprimer/<int:id_livre>', methods=['GET'])
 def supprimer_livre(id_livre):
     conn = sqlite3.connect('database2.db')
     cursor = conn.cursor()
     cursor.execute('DELETE FROM Livres WHERE ID_livre = ?', (id_livre,))
     conn.commit()
     conn.close()
-    return redirect('/livres')
+    return jsonify({"message": "Livre supprimé avec succès."})
 
 if __name__ == "__main__":
     app.run(debug=True)
