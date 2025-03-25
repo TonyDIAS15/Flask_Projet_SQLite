@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Livres</title>
+</head>
+<body>
+    <h1>Liste des Livres Disponibles</h1>
+
+    {% if livres %}
+        <ul>
+            {% for livre in livres %}
+                <li>
+                    <strong>{{ livre[1] }}</strong> par {{ livre[2] }} ({{ livre[3] }}) - Quantité : {{ livre[4] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun livre disponible pour le moment.</p>
+    {% endif %}
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+</body>
+</html>
