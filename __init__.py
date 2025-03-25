@@ -125,11 +125,6 @@ def ajouter_livre():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-
-@app.route('/livres/supprimer/<int:id_livre>', methods=['GET'])
-def page_supprimer_livre(id_livre):
-    return render_template('supprimer_livre.html', id_livre=id_livre)
-
 @app.route('/livres/supprimer/<int:id_livre>', methods=['POST'])
 def supprimer_livre(id_livre):
     conn = sqlite3.connect('database2.db')
