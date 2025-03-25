@@ -47,24 +47,24 @@
 <body>
     <div class="container">
         <h2>Ajouter un Livre</h2>
-        <form id="ajouterLivreForm">
-            <label for="ID_livre">ID du Livre :</label>
-            <input type="number" id="ID_livre" name="ID_livre" required>
+        <form id="ajouterLivreForm" method="POST" action="/livres/ajouter">
+    <label for="ID_livre">ID du Livre :</label>
+    <input type="number" id="ID_livre" name="ID_livre" required>
 
-            <label for="Titre">Titre :</label>
-            <input type="text" id="Titre" name="Titre" required>
+    <label for="Titre">Titre :</label>
+    <input type="text" id="Titre" name="Titre" required>
 
-            <label for="Auteur">Auteur :</label>
-            <input type="text" id="Auteur" name="Auteur" required>
+    <label for="Auteur">Auteur :</label>
+    <input type="text" id="Auteur" name="Auteur" required>
 
-            <label for="Annee_publication">Année de Publication :</label>
-            <input type="number" id="Annee_publication" name="Annee_publication" required>
+    <label for="Annee_publication">Année de Publication :</label>
+    <input type="number" id="Annee_publication" name="Annee_publication" required>
 
-            <label for="Quantite">Quantité :</label>
-            <input type="number" id="Quantite" name="Quantite" required>
+    <label for="Quantite">Quantité :</label>
+    <input type="number" id="Quantite" name="Quantite" required>
 
-            <button type="button" onclick="ajouterLivre()">Ajouter le Livre</button>
-        </form>
+    <button type="submit">Ajouter le Livre</button>
+</form>
         <p id="message"></p>
     </div>
 
