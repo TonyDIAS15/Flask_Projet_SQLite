@@ -87,12 +87,22 @@ def enregistrer_client():
 # Nouvelles routes pour la gestion de bibliothèque
 @app.route('/livres', methods=['GET'])
 def afficher_livres():
-    conn = sqlite3.connect('database2.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Livres WHERE Quantite > 0;')
-    livres = cursor.fetchall()
-    conn.close()
-    return render_template('livres.html', livres=livres)
+    try:
+        conn = sqlite3.connect('database2.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM Livres WHERE Quantite > 0;')
+        livres = cursor.fetchall()
+        conn.close()
+
+        # Vérification si des livres sont trouvés
+        if livres:
+            return render_template('livres.html', livres=livres)
+        else:
+            return render_template('livres.html', message="Aucun livre disponible.")
+
+    except Exception as e:
+        return jsonify({"error": f"Erreur lors de la récupération des livres : {str(e)}"}), 500
+
 
 @app.route('/livres/ajouter', methods=['GET'])
 def page_ajouter_livre():
