@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un Livre</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .container h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label, input, button {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ajouter un Livre</h2>
+        <form id="ajouterLivreForm">
+            <label for="ID_livre">ID du Livre :</label>
+            <input type="number" id="ID_livre" name="ID_livre" required>
+
+            <label for="Titre">Titre :</label>
+            <input type="text" id="Titre" name="Titre" required>
+
+            <label for="Auteur">Auteur :</label>
+            <input type="text" id="Auteur" name="Auteur" required>
+
+            <label for="Annee_publication">Année de Publication :</label>
+            <input type="number" id="Annee_publication" name="Annee_publication" required>
+
+            <label for="Quantite">Quantité :</label>
+            <input type="number" id="Quantite" name="Quantite" required>
+
+            <button type="button" onclick="ajouterLivre()">Ajouter le Livre</button>
+        </form>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function ajouterLivre() {
+            const formData = {
+                ID_livre: document.getElementById('ID_livre').value,
+                Titre: document.getElementById('Titre').value,
+                Auteur: document.getElementById('Auteur').value,
+                Annee_publication: document.getElementById('Annee_publication').value,
+                Quantite: document.getElementById('Quantite').value
+            };
+
+            fetch('/livres/ajouter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('message').textContent = data.message || data.error;
+            })
+            .catch(error => {
+                document.getElementById('message').textContent = "Erreur lors de l'ajout du livre.";
+            });
+        }
+    </script>
+</body>
+</html>
