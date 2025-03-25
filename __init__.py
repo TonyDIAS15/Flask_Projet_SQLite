@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session
+from flask import Flask, render_template_string, render_template, jsonify, request, redirect, url_for, session
 import sqlite3
 
 app = Flask(__name__)
@@ -11,12 +11,80 @@ def est_authentifie():
 def est_utilisateur_authentifie():
     return session.get('utilisateur_authentifie')
 
-# Page d'accueil
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
 
-# Route pour afficher tous les livres disponibles
+@app.route('/lecture')
+def lecture():
+    if not est_authentifie():
+        return redirect(url_for('authentification'))
+    return "<h2>Bravo, vous êtes authentifié</h2>"
+
+@app.route('/authentification', methods=['GET', 'POST'])
+def authentification():
+    if request.method == 'POST':
+        if request.form['username'] == 'admin' and request.form['password'] == 'password':
+            session['authentifie'] = True
+            return redirect(url_for('lecture'))
+        elif request.form['username'] == 'user' and request.form['password'] == '12345':
+            session['utilisateur_authentifie'] = True
+            return redirect(url_for('hello_world'))
+        else:
+            return render_template('formulaire_authentification.html', error=True)
+
+    return render_template('formulaire_authentification.html', error=False)
+
+@app.route('/fiche_client/<int:post_id>')
+def Readfiche(post_id):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM clients WHERE id = ?', (post_id,))
+    data = cursor.fetchall()
+    conn.close()
+    return render_template('read_data.html', data=data)
+
+@app.route('/fiche_nom/<nom>')
+def search_by_name(nom):
+    if not est_utilisateur_authentifie():
+        return redirect(url_for('authentification'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM clients WHERE UPPER(nom) = UPPER(?)', (nom,))
+    data = cursor.fetchall()
+    conn.close()
+    if data:
+        return render_template('read_data.html', data=data)
+    else:
+        return "<h2>Aucun client trouvé avec ce nom.</h2>"
+
+@app.route('/consultation/')
+def ReadBDD():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM clients;')
+    data = cursor.fetchall()
+    conn.close()
+    return render_template('read_data.html', data=data)
+
+@app.route('/enregistrer_client', methods=['GET'])
+def formulaire_client():
+    return render_template('formulaire.html')
+
+@app.route('/enregistrer_client', methods=['POST'])
+def enregistrer_client():
+    nom = request.form['nom']
+    prenom = request.form['prenom']
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO clients (created, nom, prenom, adresse) VALUES (?, ?, ?, ?)', (1002938, nom, prenom, "ICI"))
+    conn.commit()
+    conn.close()
+    return redirect('/consultation/')
+
+# Nouvelles routes pour la gestion de bibliothèque
 @app.route('/livres', methods=['GET'])
 def afficher_livres():
     conn = sqlite3.connect('database2.db')
@@ -26,7 +94,6 @@ def afficher_livres():
     conn.close()
     return jsonify(livres)
 
-# Route pour ajouter un livre
 @app.route('/livres/ajouter', methods=['POST'])
 def ajouter_livre():
     data = request.get_json()
@@ -38,7 +105,6 @@ def ajouter_livre():
     conn.close()
     return jsonify({"message": "Livre ajouté avec succès."})
 
-# Route pour supprimer un livre
 @app.route('/livres/supprimer/<int:id_livre>', methods=['DELETE'])
 def supprimer_livre(id_livre):
     conn = sqlite3.connect('database2.db')
@@ -48,29 +114,18 @@ def supprimer_livre(id_livre):
     conn.close()
     return jsonify({"message": "Livre supprimé avec succès."})
 
-# Route pour enregistrer un emprunt
 @app.route('/emprunts/ajouter', methods=['POST'])
 def ajouter_emprunt():
     data = request.get_json()
     conn = sqlite3.connect('database2.db')
     cursor = conn.cursor()
+    cursor.execute('INSERT INTO Emprunts (ID_emprunt, ID_utilisateur, ID_livre, Date_emprunt, Date_retour_prevue) VALUES (?, ?, ?, ?, ?)',
+                   (data['ID_emprunt'], data['ID_utilisateur'], data['ID_livre'], data['Date_emprunt'], data['Date_retour_prevue']))
+    cursor.execute('UPDATE Livres SET Quantite = Quantite - 1 WHERE ID_livre = ?', (data['ID_livre'],))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Emprunt enregistré avec succès."})
 
-    # Vérification de la disponibilité du livre
-    cursor.execute('SELECT Quantite FROM Livres WHERE ID_livre = ?', (data['ID_livre'],))
-    livre = cursor.fetchone()
-
-    if livre and livre[0] > 0:
-        cursor.execute('INSERT INTO Emprunts (ID_emprunt, ID_utilisateur, ID_livre, Date_emprunt, Date_retour_prevue) VALUES (?, ?, ?, ?, ?)',
-                       (data['ID_emprunt'], data['ID_utilisateur'], data['ID_livre'], data['Date_emprunt'], data['Date_retour_prevue']))
-        cursor.execute('UPDATE Livres SET Quantite = Quantite - 1 WHERE ID_livre = ?', (data['ID_livre'],))
-        conn.commit()
-        conn.close()
-        return jsonify({"message": "Emprunt enregistré avec succès."})
-    else:
-        conn.close()
-        return jsonify({"error": "Le livre demandé n'est pas disponible."}), 400
-
-# Route pour enregistrer le retour d'un livre
 @app.route('/emprunts/retour/<int:id_livre>', methods=['POST'])
 def retour_livre(id_livre):
     conn = sqlite3.connect('database2.db')
