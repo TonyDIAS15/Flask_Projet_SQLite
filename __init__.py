@@ -100,14 +100,21 @@ def page_ajouter_livre():
 
 @app.route('/livres/ajouter', methods=['POST'])
 def ajouter_livre():
-    data = request.form
-    conn = sqlite3.connect('database2.db')
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Livres (ID_livre, Titre, Auteur, Annee_publication, Quantite) VALUES (?, ?, ?, ?, ?)',
-                   (data['ID_livre'], data['Titre'], data['Auteur'], data['Annee_publication'], data['Quantite']))
-    conn.commit()
-    conn.close()
-    return redirect('/livres')
+    try:
+        data = request.form
+        conn = sqlite3.connect('database2.db')
+        cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO Livres (ID_livre, Titre, Auteur, Annee_publication, Quantite) VALUES (?, ?, ?, ?, ?)',
+                       (data['ID_livre'], data['Titre'], data['Auteur'], data['Annee_publication'], data['Quantite']))
+
+        conn.commit()
+        conn.close()
+        return redirect('/livres')
+    
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 
 @app.route('/livres/supprimer/<int:id_livre>', methods=['GET'])
 def page_supprimer_livre(id_livre):
