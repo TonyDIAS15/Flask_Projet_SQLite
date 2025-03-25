@@ -92,48 +92,35 @@ def afficher_livres():
     cursor.execute('SELECT * FROM Livres WHERE Quantite > 0;')
     livres = cursor.fetchall()
     conn.close()
-    return jsonify(livres)
+    return render_template('livres.html', livres=livres)
+
+@app.route('/livres/ajouter', methods=['GET'])
+def page_ajouter_livre():
+    return render_template('ajouter_livre.html')
 
 @app.route('/livres/ajouter', methods=['POST'])
 def ajouter_livre():
-    data = request.get_json()
+    data = request.form
     conn = sqlite3.connect('database2.db')
     cursor = conn.cursor()
     cursor.execute('INSERT INTO Livres (ID_livre, Titre, Auteur, Annee_publication, Quantite) VALUES (?, ?, ?, ?, ?)',
                    (data['ID_livre'], data['Titre'], data['Auteur'], data['Annee_publication'], data['Quantite']))
     conn.commit()
     conn.close()
-    return jsonify({"message": "Livre ajouté avec succès."})
+    return redirect('/livres')
 
-@app.route('/livres/supprimer/<int:id_livre>', methods=['DELETE'])
+@app.route('/livres/supprimer/<int:id_livre>', methods=['GET'])
+def page_supprimer_livre(id_livre):
+    return render_template('supprimer_livre.html', id_livre=id_livre)
+
+@app.route('/livres/supprimer/<int:id_livre>', methods=['POST'])
 def supprimer_livre(id_livre):
     conn = sqlite3.connect('database2.db')
     cursor = conn.cursor()
     cursor.execute('DELETE FROM Livres WHERE ID_livre = ?', (id_livre,))
     conn.commit()
     conn.close()
-    return jsonify({"message": "Livre supprimé avec succès."})
-
-@app.route('/emprunts/ajouter', methods=['POST'])
-def ajouter_emprunt():
-    data = request.get_json()
-    conn = sqlite3.connect('database2.db')
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Emprunts (ID_emprunt, ID_utilisateur, ID_livre, Date_emprunt, Date_retour_prevue) VALUES (?, ?, ?, ?, ?)',
-                   (data['ID_emprunt'], data['ID_utilisateur'], data['ID_livre'], data['Date_emprunt'], data['Date_retour_prevue']))
-    cursor.execute('UPDATE Livres SET Quantite = Quantite - 1 WHERE ID_livre = ?', (data['ID_livre'],))
-    conn.commit()
-    conn.close()
-    return jsonify({"message": "Emprunt enregistré avec succès."})
-
-@app.route('/emprunts/retour/<int:id_livre>', methods=['POST'])
-def retour_livre(id_livre):
-    conn = sqlite3.connect('database2.db')
-    cursor = conn.cursor()
-    cursor.execute('UPDATE Livres SET Quantite = Quantite + 1 WHERE ID_livre = ?', (id_livre,))
-    conn.commit()
-    conn.close()
-    return jsonify({"message": "Retour du livre enregistré avec succès."})
+    return redirect('/livres')
 
 if __name__ == "__main__":
     app.run(debug=True)
